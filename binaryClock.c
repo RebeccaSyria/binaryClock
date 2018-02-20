@@ -15,7 +15,6 @@
 #define CLEAR	"\033[2J"
 
 void printBin( int s ){
-	printf("%d\n",s);
 	char bin[] = "00000\0";
 	int i = 5;
 	while (s > 0){
@@ -31,15 +30,49 @@ void printBin( int s ){
 	printf("\n");
 }
 
-void printTime(){
+void printTime(int seconds, int labels, int decimal){
 	time_t t;
 	struct tm *timeinfo;
 	time(&t);
 	timeinfo = localtime(&t);
+	int s = timeinfo->tm_sec;
+	int m = timeinfo->tm_min;
+	int h = timeinfo->tm_hour;
 	//printf("Time: %s\n",asctime(timeinfo));
-	printBin(timeinfo->tm_hour);
-	printBin(timeinfo->tm_min);
-	printBin(timeinfo->tm_sec);
+	if( labels ){
+		printf("Hour:   ");
+	}	
+	printBin(h);
+	if( labels ){
+		printf("Minute: ");
+	}
+	printBin(m);
+	if( seconds ){
+		if( labels ){
+			printf("Second: ");
+		}
+		printBin(s);
+	}
+	if( decimal ){
+		if( h < 10 ){
+			printf("0%d:",h);
+		}else{
+			printf("%d:",h);
+		}
+		if( m < 10 ){
+			printf("0%d",m);
+		}else{
+			printf("%d",m);
+		}
+		if( seconds ){
+			if( s < 10 ){
+				printf(":0%d",s);
+			}else{
+				printf(":%d",s);
+			}
+		}
+		printf("\n");
+	}
 }
 
 void changeColor(int c){
@@ -71,29 +104,56 @@ void changeColor(int c){
 		}
 }
 
+void printUsage(){
+	printf("usage: binaryClock [-c [0..7]] [-s]\n");
+	printf("\t -c [0..7] \t Set color\n");
+	printf("\t -h \t\t Show this page\n");
+	printf("\t -s \t\t Toggle seconds\n");
+	printf("\t -l \t\t Toggle labels\n");	
+	printf("\t -d \t\t Toggle decimal view\n");
+}
+
 int main( int argc, char * argv[] ){
+	int lines = 2;
+	int seconds = 0; //1 when seconds active
+	int labels = 0; //1 when labels active
+	int decimal = 0; //1 when decimal view active
 	int opt;
 	int color = 0;
-	while( (opt = getopt(argc, argv, "c:h" )) != -1 ){
+	while( (opt = getopt(argc, argv, "c:hsld" )) != -1 ){
 		switch( opt ){
 			case 'c':
 				color = atoi(optarg);
 				changeColor( color );
 				break;
 			case 'h':
-				printf("usage: \n");
+				printUsage();
+				return 0;
+				break;
+			case 's':
+				seconds = 1;
+				lines += 1;
+				break;
+			case 'l':
+				labels = 1;
+				break;
+			case 'd':
+				decimal = 1;
+				lines += 1;
 				break;
 			case '?':
-				printf("usage: \n");
+				printUsage();
+				return 1;
 				break;
 		}
 	}
 
 	printf("%s",CLEAR);
 	fflush(stdout);
+
 	while(1){
-		printf("\033[6A");
-		printTime();
+		printf("\033[%dA",lines);
+		printTime(seconds, labels, decimal);
 		sleep(1);
 	}
 	printf("%s\n", NORM);
