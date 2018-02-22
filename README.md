@@ -1,7 +1,7 @@
 # BinaryClock 
 An in-progress command line binary clock written in C 
 ## Usage: 
-- compile: 'make' 
+- compile: `make` 
 - run: `./binaryClock [arguments]`
 	- Arguments: 
 	- -c [0..7]	Set color 
