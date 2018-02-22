@@ -4,6 +4,8 @@
 #include <time.h>
 #include <signal.h>
 #include <string.h>
+#include <wchar.h>
+#include <locale.h>
 
 #define NORM	"\x1B[0m"
 #define RED	"\x1B[31m"
@@ -17,12 +19,14 @@
 #define CLEAR	"\033[2J"
 #define HIDE	"\e[?25l"
 #define SHOW	"\e[?25h"
+#define BOLD	"\e[1m"
 
 void printBin( int s, char on, char off ){
-	char bin[] = "000000\0";
+	char bin[] = "000000";
 	for( int n = 0; n < 5; n++){
 		bin[n] = off;
 	}
+	//bin[6] = '\0';
 	int i = 5;
 	while (s > 0){
 		//printf("s: %d\n",s);
@@ -36,9 +40,22 @@ void printBin( int s, char on, char off ){
 		s = s / 2;
 		i--;
 	}
-	
+	//for(int i = 0; i < 6; i++){
+	//	switch(bin[i]){
+	//		case '0':
+	//			printf("%c",off);
+	//			break;
+	//		case '1':
+	//			printf("%c",on);
+	//			break;
+	//}
+	//	if( bin[i] == '0'){
+	//		printf("%lc",off);
+	//	}else{
+	//		printf("%lc",on);
+	//	}
+	//}
 	printf("%s",bin);
-	
 	printf("\n");
 }
 
@@ -123,9 +140,11 @@ void printUsage(){
 	printf("   -h \t\t Show this page\n");
 	printf("   -s \t\t Toggle seconds\n");
 	printf("   -l \t\t Toggle labels\n");	
+	printf("   -b \t\t Toggle bold font\n");
 	printf("   -d \t\t Toggle decimal view\n");
 	printf("   -o [char]\t Set on character (default: 1)\n");
-	printf("   -f [char]\t Set off character (default: 0)\n");	
+	printf("   -f [char]\t Set off character (default: 0)\n");
+	printf("%s%s\n",NORM,SHOW);	
 }
 
 static void hdl(int signum){
@@ -134,6 +153,7 @@ static void hdl(int signum){
 }
 
 int main( int argc, char * argv[] ){
+	setlocale(LC_ALL, "en_US.utf8");
 	signal(SIGINT, hdl);
 	int lines = 2;
 	int seconds = 0; //1 when seconds active
@@ -143,11 +163,14 @@ int main( int argc, char * argv[] ){
 	char off = '0';
 	int opt;
 	int color = 0;
-	while( (opt = getopt(argc, argv, "c:hsldo:f:" )) != -1 ){
+	int bold = 0; //1 when bold
+	while( (opt = getopt(argc, argv, "c:bhsldo:f:" )) != -1 ){
 		switch( opt ){
 			case 'c':
 				color = atoi(optarg);
-				changeColor( color );
+				break;
+			case 'b':
+				bold = 1;
 				break;
 			case 'h':
 				printUsage();
@@ -178,9 +201,12 @@ int main( int argc, char * argv[] ){
 	}
 
 	printf("%s%s",CLEAR,HIDE);
+	changeColor( color );
+	if( bold ){
+		printf("%s",BOLD);
+	}
 	fflush(stdout);
 	
-
 	while(1){
 		printf("\033[%dA",lines);
 		printTime(seconds, labels, decimal, on, off);
