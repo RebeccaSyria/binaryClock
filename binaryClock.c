@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
+#include <signal.h>
+#include <string.h>
 
 #define NORM	"\x1B[0m"
 #define RED	"\x1B[31m"
@@ -13,13 +15,23 @@
 #define WHITE	"\x1B[37m"
 
 #define CLEAR	"\033[2J"
+#define HIDE	"\e[?25l"
+#define SHOW	"\e[?25h"
 
-void printBin( int s ){
-	char bin[] = "00000\0";
+void printBin( int s, char on, char off ){
+	char bin[] = "000000\0";
+	for( int n = 0; n < 5; n++){
+		bin[n] = off;
+	}
 	int i = 5;
 	while (s > 0){
 		//printf("s: %d\n",s);
-		bin[i] = (s % 2) + '0';
+		if( (s%2) == 0){
+			bin[i] = off;
+		}else{
+			bin[i] = on;
+		}
+		//bin[i] = (s % 2) + '0';
 		//printf("%d",binSec[i]);
 		s = s / 2;
 		i--;
@@ -30,7 +42,7 @@ void printBin( int s ){
 	printf("\n");
 }
 
-void printTime(int seconds, int labels, int decimal){
+void printTime(int seconds, int labels, int decimal, char on, char off){
 	time_t t;
 	struct tm *timeinfo;
 	time(&t);
@@ -42,16 +54,16 @@ void printTime(int seconds, int labels, int decimal){
 	if( labels ){
 		printf("Hour:   ");
 	}	
-	printBin(h);
+	printBin(h, on, off);
 	if( labels ){
 		printf("Minute: ");
 	}
-	printBin(m);
+	printBin(m, on, off);
 	if( seconds ){
 		if( labels ){
 			printf("Second: ");
 		}
-		printBin(s);
+		printBin(s, on, off);
 	}
 	if( decimal ){
 		if( h < 10 ){
@@ -105,22 +117,33 @@ void changeColor(int c){
 }
 
 void printUsage(){
-	printf("usage: binaryClock [-c [0..7]] [-s]\n");
-	printf("\t -c [0..7] \t Set color\n");
-	printf("\t -h \t\t Show this page\n");
-	printf("\t -s \t\t Toggle seconds\n");
-	printf("\t -l \t\t Toggle labels\n");	
-	printf("\t -d \t\t Toggle decimal view\n");
+	printf("usage: binaryClock [arguments]\n");
+	printf("Arguments:\n");
+	printf("   -c [0..7] \t Set color\n");
+	printf("   -h \t\t Show this page\n");
+	printf("   -s \t\t Toggle seconds\n");
+	printf("   -l \t\t Toggle labels\n");	
+	printf("   -d \t\t Toggle decimal view\n");
+	printf("   -o [char]\t Set on character (default: 1)\n");
+	printf("   -f [char]\t Set off character (default: 0)\n");	
+}
+
+static void hdl(int signum){
+	printf("%s%s\n",NORM,SHOW);
+	exit(signum);
 }
 
 int main( int argc, char * argv[] ){
+	signal(SIGINT, hdl);
 	int lines = 2;
 	int seconds = 0; //1 when seconds active
 	int labels = 0; //1 when labels active
 	int decimal = 0; //1 when decimal view active
+	char on = '1';
+	char off = '0';
 	int opt;
 	int color = 0;
-	while( (opt = getopt(argc, argv, "c:hsld" )) != -1 ){
+	while( (opt = getopt(argc, argv, "c:hsldo:f:" )) != -1 ){
 		switch( opt ){
 			case 'c':
 				color = atoi(optarg);
@@ -141,6 +164,12 @@ int main( int argc, char * argv[] ){
 				decimal = 1;
 				lines += 1;
 				break;
+			case 'o':
+				on = *optarg;
+				break;
+			case 'f':
+				off = *optarg;
+				break;
 			case '?':
 				printUsage();
 				return 1;
@@ -148,14 +177,14 @@ int main( int argc, char * argv[] ){
 		}
 	}
 
-	printf("%s",CLEAR);
+	printf("%s%s",CLEAR,HIDE);
 	fflush(stdout);
+	
 
 	while(1){
 		printf("\033[%dA",lines);
-		printTime(seconds, labels, decimal);
+		printTime(seconds, labels, decimal, on, off);
 		sleep(1);
 	}
-	printf("%s\n", NORM);
 	return 0;
 }
