@@ -59,7 +59,7 @@ void printBin( int s, char on, char off ){
 	printf("\n");
 }
 
-void printTime(int seconds, int labels, int decimal, char on, char off){
+void printTime(int seconds, int labels, int decimal, char on, char off, int padding){
 	time_t t;
 	struct tm *timeinfo;
 	time(&t);
@@ -68,21 +68,28 @@ void printTime(int seconds, int labels, int decimal, char on, char off){
 	int m = timeinfo->tm_min;
 	int h = timeinfo->tm_hour;
 	//printf("Time: %s\n",asctime(timeinfo));
+	
+	printf("%*c",padding,' ');
 	if( labels ){
 		printf("Hour:   ");
 	}	
 	printBin(h, on, off);
+
+	printf("%*c",padding,' ');
 	if( labels ){
 		printf("Minute: ");
 	}
 	printBin(m, on, off);
+
 	if( seconds ){
+		printf("%*c",padding,' ');
 		if( labels ){
 			printf("Second: ");
 		}
 		printBin(s, on, off);
 	}
 	if( decimal ){
+		printf("%*c",padding,' ');
 		if( h < 10 ){
 			printf("0%d:",h);
 		}else{
@@ -142,6 +149,7 @@ void printUsage(){
 	printf("   -l \t\t Toggle labels\n");	
 	printf("   -b \t\t Toggle bold font\n");
 	printf("   -d \t\t Toggle decimal view\n");
+	printf("   -p [integer]  Left Padding (space characters, default 0)\n");
 	printf("   -o [char]\t Set on character (default: 1)\n");
 	printf("   -f [char]\t Set off character (default: 0)\n");
 	printf("%s%s\n",NORM,SHOW);	
@@ -164,7 +172,9 @@ int main( int argc, char * argv[] ){
 	int opt;
 	int color = 0;
 	int bold = 0; //1 when bold
-	while( (opt = getopt(argc, argv, "c:bhsldo:f:" )) != -1 ){
+	int padding = 0;
+
+	while( (opt = getopt(argc, argv, "c:bhsldp:o:f:" )) != -1 ){
 		switch( opt ){
 			case 'c':
 				color = atoi(optarg);
@@ -186,6 +196,9 @@ int main( int argc, char * argv[] ){
 			case 'd':
 				decimal = 1;
 				lines += 1;
+				break;
+			case 'p':
+				padding = atoi(optarg);
 				break;
 			case 'o':
 				on = *optarg;
@@ -209,7 +222,7 @@ int main( int argc, char * argv[] ){
 	
 	while(1){
 		printf("\033[%dA",lines);
-		printTime(seconds, labels, decimal, on, off);
+		printTime(seconds, labels, decimal, on, off, padding);
 		sleep(1);
 	}
 	return 0;
