@@ -1,5 +1,5 @@
 # BinaryClock 
-An in-progress command line binary clock written in C 
+Command line binary clock written in C 
 ## Usage: 
 - compile: `make` 
 - run: `./binaryClock [arguments]`
@@ -10,5 +10,6 @@ An in-progress command line binary clock written in C
 		- `-l`		Toggle labels
 		- `-b`		Toggle bold font 
 		- `-d`		Toggle decimal view 
+		- `-p [integer]`Left Padding (space character, default 0)
 		- `-o [char]`	Set on character (default: 1)
 		- `-f [char]`	Set off character (default: 0)
